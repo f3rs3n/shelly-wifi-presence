@@ -5,7 +5,7 @@
 // --- CONFIGURATION ---
 let CONFIG = {
   // SSID (name) of your car's Wi-Fi network
-  CarSSID: "DIRECT-BMW 18863",
+  CarSSID: "YOUR_CAR_WIFI_SSID",
   
   // The ID of the switch to control
   SwitchID: 0,
