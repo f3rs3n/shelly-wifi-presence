@@ -1,11 +1,10 @@
-// Shelly Script: Garage Light Control
-// Turns on the light when the car's Wi-Fi is detected, which in turn
-// resets the built-in auto-off timer of the Shelly device.
+// Shelly Script: Garage Light Control (SSID Version)
+// Resets the Shelly's built-in auto-off timer on every detection.
 
 // --- CONFIGURATION ---
 let CONFIG = {
   // SSID (name) of your car's Wi-Fi network
-  CarSSID: "YOUR_CAR_WIFI_SSID",
+  CarSSID: "DIRECT-BMW 18863",
   
   // The ID of the switch to control
   SwitchID: 0,
@@ -18,31 +17,26 @@ let CONFIG = {
 function checkForCar() {
   Shelly.call("Wifi.Scan", {}, function(result) {
     if (!result || !result.results) {
-      return; // Exit silently on scan failure or empty results
+      return; // Exit silently on scan failure
     }
     
-    // Check if at least one network in the scan results matches the car's SSID.
-    // .some() stops iterating as soon as the condition is met.
     const carNetworkFound = result.results.some(function(network) {
       return network.ssid === CONFIG.CarSSID;
     });
 
-    // Only proceed if the car is found
+    // If the car is detected...
     if (carNetworkFound) {
-      Shelly.call("Switch.GetStatus", { id: CONFIG.SwitchID }, function(status) {
-        // Only turn the light on if it is currently OFF to avoid spamming commands
-        if (status.output === false) {
-          console.log("Car present and light is off. Turning on and resetting timer.");
-          Shelly.call("Switch.Set", { id: CONFIG.SwitchID, on: true });
-        }
-      });
+      // ...turn the light on. This command is sent on every successful scan
+      // to ensure the Shelly's auto-off timer is reset.
+      console.log("Car present. Resetting auto-off timer.");
+      Shelly.call("Switch.Set", { id: CONFIG.SwitchID, on: true });
     }
   });
 }
 
 // --- INITIALIZATION ---
 Timer.set(CONFIG.ScanInterval_s * 1000, true, checkForCar);
-console.log("Script 'Car Detection' started.");
+console.log("Script 'Car Detection' (SSID Version) started.");
 console.log("Ensure the Shelly's 'Auto Off' timer is set correctly.");
 
 checkForCar();
