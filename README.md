@@ -1,107 +1,55 @@
 # Shelly Garage Light Automation Scripts
 
-A collection of scripts for Shelly Gen3 devices to automatically control a garage light based on a car's presence, detected via its Wi-Fi hotspot.
+This repository contains two scripts for Shelly Gen2/Gen3 devices (like Shelly Plus or Pro series) to automatically turn on a garage light based on the presence of a car's Wi-Fi network.
 
-## Project Overview
+The primary goal is to create a "welcome home" light that stays on as long as the car is present and turns off with a delay after you leave, all while remaining compatible with a physical wall switch.
 
-This project provides a simple yet effective way to automate your garage lighting. The script turns on a light connected to a Shelly device whenever your car is nearby and ensures it stays on as long as the car is present. It leverages the Shelly's built-in "Auto Off" timer, making the solution efficient and integrated with the device's native features.
-
-This repository contains two versions of the script, using different methods for vehicle detection.
+There are two versions of the script:
+1.  `shelly-wifi-ssid-presence.js`: Detects the car by its Wi-Fi network name (SSID).
+2.  `shelly-wifi-mac-presence.js`: Detects the car by its Wi-Fi network's unique MAC address (BSSID). This is generally more reliable.
 
 ## Features
 
-* **Automatic Light Control**: Turns the light on when you arrive.
+- **Automatic Light Activation**: The light turns on when the car's Wi-Fi is detected nearby.
+- **Smart Timer Reset**: The light stays on as long as the car is present by continuously resetting the Shelly's built-in timer.
+- **Works Offline**: The detection logic is entirely local and does not require an internet or home Wi-Fi connection in the garage.
+- **Wall Switch Compatible**: The physical button continues to work as expected.
+- **Efficient and Lightweight**: The scripts are optimized to be gentle on the Shelly device.
 
-* **Presence Detection**: Keeps the light on as long as the car is detected.
+## Prerequisites
 
-* **Efficient Timer Logic**: Resets the Shelly's built-in auto-off timer instead of managing a custom timer within the script.
+1.  A Shelly Gen2/Gen3 device (e.g., Shelly 1PM Mini Gen3, Shelly Plus 1PM) updated to the latest firmware.
+2.  The Shelly device must be configured to control your garage light.
 
-* **Optimized Performance**: Checks the light's status before sending commands to avoid unnecessary network traffic.
+## Setup Instructions
 
-* **Easy Configuration**: All settings are managed in a simple `CONFIG` object at the top of the script.
+1.  **Configure Shelly's Auto-Off Timer**:
+    - Access your Shelly's web interface.
+    - Go to **Settings > Timer > Auto Off**.
+    - Set a timer for how long you want the light to stay on after you leave (e.g., `180` seconds for 3 minutes). This is your "courtesy light" delay.
+    - This timer will be reset by the script as long as your car is detected.
 
-* **Fully Offline**: Works without an internet connection, relying on local Wi-Fi scanning.
-
-## Scripts Included
-
-### 1. SSID Version (`ssid-version.js`)
-
-* **Detection Method**: Scans for the Wi-Fi network name (SSID) broadcasted by your car's infotainment system.
-
-* **Pros**: Simple to set up; just requires the network name.
-
-* **Cons**: Less unique, as other devices could potentially have the same SSID.
-
-### 2. MAC Address Version (`mac-version.js`)
-
-* **Detection Method**: Scans for the unique MAC address (BSSID) of your car's Wi-Fi hotspot.
-
-* **Pros**: More robust and reliable, as the MAC address is a unique hardware identifier.
-
-* **Cons**: Requires you to find the specific MAC address of your car's hotspot.
+2.  **Install the Script**:
+    - In the Shelly web interface, go to the **Scripts** section.
+    - Create a new script.
+    - Copy the entire content of either `shelly-wifi-ssid-presence.js` or `shelly-wifi-mac-presence.js` and paste it into the editor.
+    - Configure the `CarSSID` or `CarMACs` variable at the top of the script with your car's Wi-Fi details.
+    - Save and enable the script by toggling the switch next to its name.
 
 ## How It Works
 
-1. **Configuration**: You set up a built-in "Auto Off" timer in your Shelly device's settings (e.g., 180 seconds).
+The script periodically scans for nearby Wi-Fi networks at a set interval (e.g., every 30 seconds).
 
-2. **Scanning**: The script runs on the Shelly and periodically scans for nearby Wi-Fi networks (e.g., every 15-30 seconds).
+If the car's network is detected, the script sends an `Switch.Set` command to turn the light ON. This action has a clever side effect: it **resets the Shelly's built-in auto-off timer**, causing the countdown to start over.
 
-3. **Detection**: It checks if the car's Wi-Fi (identified by SSID or MAC address) is present in the scan results.
+As long as the car is present, this cycle repeats, effectively keeping the light on. When you leave, the script stops detecting the car, the timer is no longer reset, and the light turns off automatically after the configured delay.
 
-4. **Action**: If the car is detected and the light is currently off, the script sends a command to turn the light on.
+### Pro Tip: Finding Your Car's Wi-Fi Details
 
-5. **Timer Reset**: This "turn on" command automatically resets the Shelly's 180-second auto-off countdown. As long as the script keeps detecting the car, it will keep resetting the timer, effectively keeping the light on.
+In my experience, the Wi-Fi network used by your car's infotainment system for **Apple CarPlay or Android Auto** works perfectly for this. You don't need to enable a separate internet hotspot. You can find the SSID and MAC address by scanning for networks with your phone while this feature is active.
 
-6. **Departure**: When you leave, the script no longer detects the car. The last auto-off countdown completes, and the light turns off automatically.
+### Design Philosophy & Adaptability
 
-## Design Philosophy & Adaptability
+This script is intentionally designed to integrate with a "momentary" or "button" switch setup combined with Shelly's internal timer. This provides a practical delay for a garage light, preventing it from turning off too quickly.
 
-This script is intentionally designed to integrate with a Shelly connected to a **momentary switch (button)** and configured with an **"Auto Off" timer**. This setup is ideal for a garage light for a key reason:
-
-* **Courtesy Light Delay**: The timer ensures the light stays on for a few minutes after you've left the garage, preventing it from shutting off abruptly and leaving you in the dark.
-
-While the script could be modified for a direct ON/OFF logic (light on when present, off immediately when absent), that approach is less practical for this specific application.
-
-## Pro Tip: Which Wi-Fi to use?
-
-In most cases, you don't need to activate a full internet-sharing hotspot in your car. The local Wi-Fi network that the infotainment system creates for wireless **Apple CarPlay** or **Android Auto** is usually sufficient for this script to work. This network is broadcasted even without an active internet connection.
-
-## Requirements
-
-* A Shelly Gen3 device (e.g., Shelly 1PM Mini Gen3).
-
-* A vehicle with a Wi-Fi hotspot feature (including the one for CarPlay/Android Auto).
-
-## Installation
-
-1. Access your Shelly device's web interface by navigating to its IP address in a browser.
-
-2. Go to the **Scripts** section.
-
-3. Click the **(+)** button to create a new script.
-
-4. Copy the content of either `ssid-version.js` or `mac-version.js` and paste it into the editor.
-
-5. Update the `CONFIG` section with your details (see below).
-
-6. Save the script and enable it using the toggle switch.
-
-## Configuration
-
-Before saving, you must edit the `CONFIG` object at the top of the script:
-
-let CONFIG = {
-
-// For ssid-version.js
-
-CarSSID: "YOUR_CARS_WIFI_NAME",
-
-// For mac-version.js
-
-CarMACs: ["XX:XX:XX:XX:XX:XX"],
-
-// Common settings
-
-SwitchID: 0,ScanInterval_s: 30, // How often to scan, in seconds};
-
-Finally, in your Shelly's settings, navigate to **Timers > Auto Off** and set a timer (e.g., 180 seconds). This value should be longer than your `ScanInterval_s`.
+While the script could be adapted for a direct ON/OFF logic (light on if present, off if absent), that approach is less practical for a garage setting, as the light would shut off instantly upon leaving, which is often undesirable.
